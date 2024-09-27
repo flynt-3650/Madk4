@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,11 +18,15 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.madk4.databinding.FragmentCameraBinding
 import java.io.File
+import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -32,10 +37,8 @@ class CameraFragment : Fragment() {
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var viewFinder: PreviewView
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View {
         _binding = FragmentCameraBinding.inflate(inflater, container, false)
         cameraExecutor = Executors.newSingleThreadExecutor()
         viewFinder = binding.previewView
@@ -52,13 +55,19 @@ class CameraFragment : Fragment() {
             val dateTime: String = LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
-            val filePath: Path = Paths.get("photos/data.txt")
-            if (!Files.exists(filePath)) {
-                Files.createFile(filePath)
+            val photosDir = File(requireContext()
+                .getExternalFilesDir(Environment.DIRECTORY_PICTURES), "photos")
+            if (!photosDir.exists()) {
+                photosDir.mkdirs()
             }
-
-            val file = File("photos/data.txt")
-            file.writeText(dateTime)
+            val file = File(photosDir, "data.txt")
+            try {
+                FileOutputStream(file, true).use { outputStream ->
+                    outputStream.write("$dateTime\n".toByteArray())
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
 
         return binding.root

@@ -1,6 +1,7 @@
 package com.example.madk4.list
 
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.madk4.R
 import com.example.madk4.databinding.FragmentListBinding
 import java.io.BufferedReader
+import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStreamReader
 
@@ -17,36 +20,40 @@ class ListFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var listAdapter: ListAdapter
-    private val dataList = mutableListOf<String>()
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_list, container, false)
         recyclerView = view.findViewById(R.id.recyclerView)
 
-        readDataFromFile()
+        val data = readDateTimeFromFile()
 
-        listAdapter = ListAdapter(dataList)
+        listAdapter = ListAdapter(data)
+
         recyclerView.adapter = listAdapter
-        recyclerView.layoutManager = LinearLayoutManager(context)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         return view
     }
 
-    private fun readDataFromFile() {
+    private fun readDateTimeFromFile(): List<String> {
+        val photosDir = File(requireContext()
+            .getExternalFilesDir(Environment.DIRECTORY_PICTURES), "photos")
+        val dateFile = File(photosDir, "data.txt")
+        val data = mutableListOf<String>()
+
         try {
-            val inputStream = requireContext().assets.open("photos/data.txt")
-            val bufferedReader = BufferedReader(InputStreamReader(inputStream))
-            var line: String?
-            while (bufferedReader.readLine().also { line = it } != null) {
-                line?.let { dataList.add(it) }
+            FileInputStream(dateFile).use { inputStream ->
+                InputStreamReader(inputStream).use { reader ->
+                    reader.forEachLine { line ->
+                        data.add(line)
+                    }
+                }
             }
-            bufferedReader.close()
-            inputStream.close()
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             e.printStackTrace()
         }
+
+        return data
     }
 }

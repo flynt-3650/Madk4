@@ -1,6 +1,7 @@
 package com.example.madk4
 
 import android.os.Bundle
+import android.os.Environment
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -27,7 +28,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        val file = File("photos/data.txt")
+        val file = File(Environment.DIRECTORY_PICTURES, "data.txt")
         file.delete()
     }
 }
